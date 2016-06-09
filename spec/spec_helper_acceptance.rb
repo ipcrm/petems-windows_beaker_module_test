@@ -1,7 +1,8 @@
 require 'beaker-rspec/spec_helper'
 require 'beaker-rspec/helpers/serverspec'
+require 'winrm'
 
-GEOTRUST_GLOBAL_CA = <<-EOM
+GEOTRUST_GLOBAL_CA = <<-EOM.freeze
 -----BEGIN CERTIFICATE-----
 MIIDVDCCAjygAwIBAgIDAjRWMA0GCSqGSIb3DQEBBQUAMEIxCzAJBgNVBAYTAlVT
 MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJHZW9UcnVzdCBHbG9i
@@ -26,31 +27,10 @@ EOM
 
 hosts.each do |host|
   version = ENV['PUPPET_GEM_VERSION'] || '3.8.3'
-
-  if host.to_s =~ /2012/
-    # This takes about 90 seconds on a decent connection. Required for weird Win2012 only issue
-    # @see PUP-1951
-    # @see PUP-3965
-    DOTNET_HACK = <<-EOF.gsub!(/\n+/, '').gsub!(/^\s+/, '')
-    $webclient = New-Object System.Net.WebClient ;
-    $webclient.DownloadFile('https://googledrive.com/host/0B4_Bou5W3VsSfjRmeTBaak1Da2ZtVE95M25teWlfa0Y1NEVEYlBHNGV3S3liQTlWNTBGR0E/sxs.zip','C:\\Windows\\Temp\\sxs.zip') ;
-    Add-Type -Assembly 'System.IO.Compression.FileSystem' ;
-    [System.IO.Compression.ZipFile]::ExtractToDirectory('C:\\Windows\\Temp\\sxs.zip', 'C:\\Windows\\Temp\\sxs') ;
-    Install-WindowsFeature Net-Framework-Core -source C:\\Windows\\Temp\\sxs ;
-    shutdown /r /t 0
-    EOF
-
-    on host, powershell(DOTNET_HACK)
-    sleep(30)
-    host.close
-    sleep(10)
-    host.connection
-  end
-
-  install_puppet(:version => version)
+  install_puppet(version: version)
   install_cert_on_windows(host, 'geotrustglobal', GEOTRUST_GLOBAL_CA)
-  on host, puppet('module','install', "puppetlabs-stdlib")
-  on host, puppet('module','install', "puppetlabs-powershell")
+  on host, puppet('module', 'install', 'puppetlabs-stdlib')
+  on host, puppet('module', 'install', 'puppetlabs-powershell')
 end
 
 RSpec.configure do |c|
