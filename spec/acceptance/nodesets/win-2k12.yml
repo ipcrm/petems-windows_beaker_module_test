@@ -4,40 +4,28 @@ HOSTS:
       - default
       - agent
     platform: windows-server-amd64
-    image: win-2k12-bitvise
+    image: win-2k12-bitvise-sysprep
     flavor: d1.medium
     hypervisor: openstack
     is_cygwin: false
+    ssh:
+      user: Administrator
+      password: Puppetlabs1
+      auth_methods:
+        - password
+    communicator: bitvise
     user_data: |
       <powershell>
       net user Administrator "Puppetlabs1"
       wmic useraccount where "name='Administrator'" set PasswordExpires=FALSE
-
-      # Enable RDP
-      set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
-      netsh advfirewall firewall add rule name="RDP 3389" dir=in localport=3389 protocol=TCP action=allow
-
-      # Enable WinRM
-      winrm quickconfig -q
-      winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="0"}'
-      winrm set winrm/config '@{MaxTimeoutms="7200000"}'
-      winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-      winrm set winrm/config/service/auth '@{Basic="true"}'
-
-      netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
-
-      net stop winrm
-      sc.exe config winrm start=auto
-      net start winrm
-
-      # turn off PowerShell execution policy restrictions
       Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope LocalMachine
       </powershell>
 CONFIG:
   log_level: verbose
   type: aio
   nfs_server: none
-  security_group: ['sg0', 'default']
+  security_group: ['sg0']
   floating_ip_pool: 'ext-net-pdx1-opdx1'
   openstack_volume_support: false
   openstack_network : 'network0'
+
