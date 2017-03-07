@@ -10,5 +10,4 @@ HOSTS:
     ip: '10.255.33.129'
     is_cygwin: false
 CONFIG:
-  log_level: verbose
   type: git

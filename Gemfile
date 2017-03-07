@@ -1,5 +1,4 @@
 source ENV['GEM_SOURCE'] || "https://rubygems.org"
-
 def location_from_env(env, default_location = [])
   if location = ENV[env]
     if location =~ /^((?:git|https?)[:@][^#]*)#(.*)/
@@ -29,22 +28,15 @@ group :development, :unit_tests do
   gem 'json_pure', '<= 2.0.1' if RUBY_VERSION < '2.0.0'
 end
 group :system_tests do
-  gem 'beaker',        :git => 'https://github.com/ipcrm/beaker.git',
-                       :ref => 'win_test_rebase'
-  gem 'puppet-syntax', :git => 'https://github.com/ipcrm/puppet-syntax.git',
-                       :ref => 'cb51026e5664aad04a4162ba254b75dca8bf10d6'
+  gem 'beaker'
   gem 'beaker-rspec'
   gem 'serverspec'
-  gem 'highline'
   gem 'beaker-puppet_install_helper'
   gem 'master_manipulator'
   gem 'beaker-hostgenerator', *location_from_env('BEAKER_HOSTGENERATOR_VERSION', [])
+  gem 'winrm'
+  gem 'vagrant-wrapper'
 end
 
-gem 'winrm'
 gem 'facter', *location_from_env('FACTER_GEM_VERSION')
 gem 'puppet', *location_from_env('PUPPET_GEM_VERSION')
-
-if File.exists? "#{__FILE__}.local"
-  eval(File.read("#{__FILE__}.local"), binding)
-end
